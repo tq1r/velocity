@@ -71,7 +71,7 @@ export const getSettings = async (): Promise<UserSettings> => {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (raw) return JSON.parse(raw);
   } catch {}
-  return { profile_name: '', theme: 'velocity-night', accent: 'violet', font_size: 14, ui_scale: 1.0, startup_preset: 'ai-engineer', animations: true, daily_ai_limit: 50, usage_today: 0, usage_date: '', ai: { provider_name: 'openai', api_base: 'https://api.openai.com/v1', model: 'gpt-4', temperature: 0.2, system_prompt: '', api_key: '', use_local_model: false } };
+  return { profile_name: '', theme: 'velocity-night', accent: 'violet', font_size: 14, ui_scale: 1.0, startup_preset: 'ai-engineer', animations: true, daily_ai_limit: 200, usage_today: 0, usage_date: '', ai: { provider_name: 'openai', api_base: 'https://api.openai.com/v1', model: 'gpt-4', temperature: 0.2, system_prompt: '', api_key: '', use_local_model: false } };
 };
 
 export const saveSettings = async (settings: UserSettings): Promise<UserSettings> => {

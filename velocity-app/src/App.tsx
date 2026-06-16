@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useVelocityStore } from './state/store';
-import { pickFolder, openWorkspace, getWorkspaceSnapshot, readWorkspaceFile, saveWorkspaceFile, createEntry, renameEntry, deleteEntry, getSettings, getQuotaInfo, listenForFsChanges } from './lib/tauri';
+import { pickFolder, openWorkspace, getWorkspaceSnapshot, readWorkspaceFile, saveWorkspaceFile, createEntry, renameEntry, deleteEntry, getSettings, saveSettings, getQuotaInfo, listenForFsChanges } from './lib/tauri';
 import type { FileNode, EditorTab } from './types';
 import { ActivityBar } from './components/ActivityBar';
 import { FileExplorer } from './components/FileExplorer';
@@ -48,7 +48,17 @@ export default function App() {
       setAuthToken(token);
       checkSession().then((user) => {
         store.setUser(user);
-        getPremiumStatus().then((p) => store.setPremium(p)).catch(() => {});
+        getPremiumStatus().then((p) => {
+          store.setPremium(p);
+          if (p.premium) {
+            getSettings().then((s) => {
+              if (s.daily_ai_limit <= 200) {
+                s.daily_ai_limit = 2000;
+                saveSettings(s).then((saved) => store.setSettings(saved)).catch(() => {});
+              }
+            }).catch(() => {});
+          }
+        }).catch(() => {});
         getOwnerInfo().then((ownerInfo) => {
           const isOwner = ownerInfo.owner_user_id === user.id;
           store.setIsOwner(isOwner);

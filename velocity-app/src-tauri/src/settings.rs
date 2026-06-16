@@ -48,7 +48,7 @@ fn default_settings() -> VelocitySettings {
         ui_scale: 1.0,
         startup_preset: "ai-engineer".into(),
         animations: true,
-        daily_ai_limit: 50,
+        daily_ai_limit: 200,
         usage_today: 0,
         usage_date: String::new(),
         ai: AISettings {
