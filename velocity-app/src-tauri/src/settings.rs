@@ -48,6 +48,10 @@ fn default_settings() -> VelocitySettings {
         ui_scale: 1.0,
         startup_preset: "ai-engineer".into(),
         animations: true,
+        owner_email: String::new(),
+        daily_ai_limit: 50,
+        usage_today: 0,
+        usage_date: String::new(),
         ai: AISettings {
             provider_name: "openai".into(),
             api_base: "https://api.openai.com/v1".into(),

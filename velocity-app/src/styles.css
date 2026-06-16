@@ -425,6 +425,18 @@ a { color: var(--text-accent); text-decoration: none; }
   background: var(--bg-hover);
 }
 
+.quota-badge {
+  font-size: 10px;
+  font-weight: 400;
+  text-transform: none;
+  letter-spacing: normal;
+  padding: 2px 6px;
+  border-radius: var(--radius-sm);
+  background: var(--bg-overlay);
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
 .ai-messages {
   flex: 1;
   overflow-y: auto;

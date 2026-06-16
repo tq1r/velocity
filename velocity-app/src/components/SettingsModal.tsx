@@ -158,6 +158,15 @@ export function SettingsModal({ onClose }: SettingsModalProps) {
                 <option value="review-mode">Review Mode</option>
               </select>
             </div>
+            <div className="settings-row">
+              <span className="settings-label">Owner Email</span>
+              <input className="settings-input" value={settings.owner_email} onChange={(e) => update('owner_email', e.target.value)} placeholder="you@example.com — bypasses AI limits" />
+            </div>
+            <div className="settings-row">
+              <span className="settings-label">Daily AI Limit</span>
+              <input className="settings-input" type="number" min={0} value={settings.daily_ai_limit} onChange={(e) => update('daily_ai_limit', parseInt(e.target.value) || 0)} />
+              <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>0 = unlimited</span>
+            </div>
           </div>
           <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, marginTop: 20 }}>
             <button className="ai-action-btn" onClick={onClose}>Cancel</button>

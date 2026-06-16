@@ -8,6 +8,7 @@ import type {
   WorkspaceSnapshot,
   UserProfile,
   PremiumStatus,
+  QuotaInfo,
 } from '../types';
 
 interface VelocityState {
@@ -27,6 +28,7 @@ interface VelocityState {
   settings: UserSettings | null;
   user: UserProfile | null;
   premium: PremiumStatus | null;
+  quota: QuotaInfo | null;
   setWorkspace: (workspace: WorkspaceSnapshot | null) => void;
   openTab: (tab: EditorTab) => void;
   updateTabContent: (path: string, content: string) => void;
@@ -47,6 +49,7 @@ interface VelocityState {
   setSettings: (settings: UserSettings) => void;
   setUser: (user: UserProfile | null) => void;
   setPremium: (premium: PremiumStatus | null) => void;
+  setQuota: (quota: QuotaInfo | null) => void;
 }
 
 export const useVelocityStore = create<VelocityState>((set) => ({
@@ -72,6 +75,7 @@ export const useVelocityStore = create<VelocityState>((set) => ({
   settings: null,
   user: null,
   premium: null,
+  quota: null,
   setWorkspace: (workspace) => set({ workspace }),
   openTab: (tab) =>
     set((state) => {
@@ -124,4 +128,5 @@ export const useVelocityStore = create<VelocityState>((set) => ({
   setSettings: (settings) => set({ settings }),
   setUser: (user) => set({ user }),
   setPremium: (premium) => set({ premium }),
+  setQuota: (quota) => set({ quota }),
 }));

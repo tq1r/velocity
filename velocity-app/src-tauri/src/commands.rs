@@ -224,11 +224,68 @@ pub fn apply_unified_diff(
     diff::apply_diff(&diff, &root).map_err(|e| e.to_string())
 }
 
+fn check_ai_quota(state: &AppState, user_email: &str) -> Result<(), String> {
+    let mut settings = state.settings.lock().unwrap();
+    let today = chrono::Local::now().format("%Y-%m-%d").to_string();
+
+    if !settings.owner_email.is_empty() && user_email == settings.owner_email {
+        return Ok(());
+    }
+
+    if settings.daily_ai_limit == 0 {
+        return Ok(());
+    }
+
+    if settings.usage_date != today {
+        settings.usage_date = today.clone();
+        settings.usage_today = 0;
+    }
+
+    if settings.usage_today >= settings.daily_ai_limit {
+        return Err(format!(
+            "Daily AI limit reached ({}/{}). Resets tomorrow. Set your email as Owner in Settings to remove limits.",
+            settings.usage_today, settings.daily_ai_limit
+        ));
+    }
+
+    settings.usage_today += 1;
+    let _ = settings::save(&settings);
+    Ok(())
+}
+
+#[tauri::command]
+pub fn get_quota_info(user_email: String, state: State<'_, AppState>) -> Result<QuotaInfo, String> {
+    let mut settings = state.settings.lock().unwrap();
+    let today = chrono::Local::now().format("%Y-%m-%d").to_string();
+
+    if settings.usage_date != today {
+        settings.usage_date = today;
+        settings.usage_today = 0;
+    }
+
+    let is_owner = !settings.owner_email.is_empty() && user_email == settings.owner_email;
+    let remaining = if settings.daily_ai_limit == 0 {
+        -1
+    } else {
+        (settings.daily_ai_limit as i32 - settings.usage_today as i32).max(0)
+    };
+
+    Ok(QuotaInfo {
+        used_today: settings.usage_today,
+        daily_limit: settings.daily_ai_limit,
+        is_owner,
+        remaining,
+    })
+}
+
 #[tauri::command]
 pub async fn run_ai_request(
     request: AIRequest,
     state: State<'_, AppState>,
 ) -> Result<AIResponse, String> {
+    let user_email = request.user_email.as_deref().unwrap_or("");
+    check_ai_quota(&state, user_email)?;
+
     let (api_base, api_key, model, system_prompt, temperature) = {
         let settings = state.settings.lock().unwrap();
         (
@@ -551,6 +608,12 @@ pub async fn stream_ai_request(
     app: tauri::AppHandle,
     state: State<'_, AppState>,
 ) -> Result<(), String> {
+    let user_email = request.user_email.as_deref().unwrap_or("");
+    if let Err(e) = check_ai_quota(&state, user_email) {
+        let _ = app.emit("ai://stream-error", &e);
+        return Err(e);
+    }
+
     let (messages, api_base, api_key, model, temperature) = build_ai_context(&request, &state);
 
     if api_key.is_empty() {

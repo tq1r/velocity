@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useVelocityStore } from './state/store';
-import { pickFolder, openWorkspace, getWorkspaceSnapshot, readWorkspaceFile, saveWorkspaceFile, createEntry, renameEntry, deleteEntry, getSettings, listenForFsChanges } from './lib/tauri';
+import { pickFolder, openWorkspace, getWorkspaceSnapshot, readWorkspaceFile, saveWorkspaceFile, createEntry, renameEntry, deleteEntry, getSettings, getQuotaInfo, listenForFsChanges } from './lib/tauri';
 import type { FileNode, EditorTab } from './types';
 import { ActivityBar } from './components/ActivityBar';
 import { FileExplorer } from './components/FileExplorer';
@@ -49,6 +49,7 @@ export default function App() {
       checkSession().then((user) => {
         store.setUser(user);
         getPremiumStatus().then((p) => store.setPremium(p)).catch(() => {});
+        getQuotaInfo(user.email || '').then((q) => store.setQuota(q)).catch(() => {});
       }).catch(() => {
         localStorage.removeItem('velocity-auth-token');
       });

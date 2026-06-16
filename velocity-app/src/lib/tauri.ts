@@ -4,6 +4,7 @@ import type {
   DiffApplyResult,
   FileDocument,
   LocalModelStatus,
+  QuotaInfo,
   UserSettings,
   WorkspaceSnapshot,
   FileNode,
@@ -55,6 +56,13 @@ export const pickFolder = async (): Promise<string | null> => {
   return name || null;
 };
 
+export const getQuotaInfo = async (userEmail: string): Promise<QuotaInfo | null> => {
+  if (tauriInvoke) {
+    try { return await tauriInvoke('get_quota_info', { userEmail }); } catch {}
+  }
+  return null;
+};
+
 export const getSettings = async (): Promise<UserSettings> => {
   if (tauriInvoke) {
     try { return await tauriInvoke('get_settings'); } catch {}
@@ -63,7 +71,7 @@ export const getSettings = async (): Promise<UserSettings> => {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (raw) return JSON.parse(raw);
   } catch {}
-  return { profile_name: '', theme: 'velocity-night', accent: 'violet', font_size: 14, ui_scale: 1.0, startup_preset: 'ai-engineer', animations: true, ai: { provider_name: 'openai', api_base: 'https://api.openai.com/v1', model: 'gpt-4', temperature: 0.2, system_prompt: '', api_key: '', use_local_model: false } };
+  return { profile_name: '', theme: 'velocity-night', accent: 'violet', font_size: 14, ui_scale: 1.0, startup_preset: 'ai-engineer', animations: true, owner_email: '', daily_ai_limit: 50, usage_today: 0, usage_date: '', ai: { provider_name: 'openai', api_base: 'https://api.openai.com/v1', model: 'gpt-4', temperature: 0.2, system_prompt: '', api_key: '', use_local_model: false } };
 };
 
 export const saveSettings = async (settings: UserSettings): Promise<UserSettings> => {

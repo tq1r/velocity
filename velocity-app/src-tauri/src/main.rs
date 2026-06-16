@@ -47,6 +47,7 @@ fn main() {
             commands::run_local_ai_request,
             commands::stream_ai_request,
             commands::get_inline_completion,
+            commands::get_quota_info,
         ])
         .run(tauri::generate_context!())
         .expect("error while running Velocity");

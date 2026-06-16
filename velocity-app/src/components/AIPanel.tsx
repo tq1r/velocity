@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { useVelocityStore } from '../state/store';
-import { runLocalAIRequest, searchFiles, applyUnifiedDiff, startAiStream, listenForAiStream } from '../lib/tauri';
+import { runLocalAIRequest, searchFiles, applyUnifiedDiff, startAiStream, listenForAiStream, getQuotaInfo } from '../lib/tauri';
 import type { AIChatMessage, AIRequest } from '../types';
 
 type AIAction = 'chat' | 'explain' | 'refactor' | 'edit';
@@ -61,6 +61,13 @@ export function AIPanel({ action, onActionChange }: AIPanelProps) {
       messages: [...store.aiMessages, userMsg],
       ...context,
       action: actionType,
+      user_email: store.user?.email || null,
+    };
+
+    const refreshQuota = () => {
+      if (store.user?.email) {
+        getQuotaInfo(store.user.email).then((q) => store.setQuota(q)).catch(() => {});
+      }
     };
 
     if (!isLocalModel) {
@@ -74,6 +81,7 @@ export function AIPanel({ action, onActionChange }: AIPanelProps) {
           },
           (response) => {
             setStreamingContent(null);
+            refreshQuota();
             const assistantMsg: AIChatMessage = { role: 'assistant', content: response.message };
             store.pushAIMessage(assistantMsg);
             store.setLastAIResponse(response);
@@ -170,11 +178,25 @@ export function AIPanel({ action, onActionChange }: AIPanelProps) {
 
   const modelLabel = isLocalModel ? 'Velocity Model' : (store.settings?.ai?.model || 'AI');
 
+  const quota = store.quota;
+  const quotaLabel = quota
+    ? quota.is_owner
+      ? 'Owner (unlimited)'
+      : quota.daily_limit === 0
+        ? 'Unlimited'
+        : `${quota.remaining}/${quota.daily_limit} today`
+    : null;
+
   return (
     <div className="ai-panel">
       <div className="ai-panel-header">
         <span>{modelLabel}</span>
         <div className="ai-panel-header-actions">
+          {quotaLabel && (
+            <span className="quota-badge" title={quota?.is_owner ? 'Owner account - no limits' : 'AI requests remaining today'}>
+              {quotaLabel}
+            </span>
+          )}
           <button className="ai-panel-header-btn" title="Reference file" onClick={handleRefFile}>
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg>
           </button>

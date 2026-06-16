@@ -49,6 +49,7 @@ export interface AIRequest {
   api_base?: string | null;
   api_key?: string | null;
   model?: string | null;
+  user_email?: string | null;
 }
 
 export interface AIResponse {
@@ -86,6 +87,13 @@ export interface DiffApplyResult {
   summary: string;
 }
 
+export interface QuotaInfo {
+  used_today: number;
+  daily_limit: number;
+  is_owner: boolean;
+  remaining: number;
+}
+
 export interface UserSettings {
   profile_name: string;
   theme: 'velocity-night' | 'midnight-blue' | 'graphite';
@@ -94,6 +102,10 @@ export interface UserSettings {
   ui_scale: number;
   startup_preset: 'ai-engineer' | 'minimal' | 'review-mode';
   animations: boolean;
+  owner_email: string;
+  daily_ai_limit: number;
+  usage_today: number;
+  usage_date: string;
   ai: {
     provider_name: string;
     api_base: string;
