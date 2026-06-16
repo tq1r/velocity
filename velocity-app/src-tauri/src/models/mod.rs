@@ -72,6 +72,7 @@ pub struct AIRequest {
     pub api_key: Option<String>,
     pub model: Option<String>,
     pub user_email: Option<String>,
+    pub is_owner: bool,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -97,7 +98,6 @@ pub struct VelocitySettings {
     pub ui_scale: f64,
     pub startup_preset: String,
     pub animations: bool,
-    pub owner_email: String,
     pub daily_ai_limit: u32,
     pub usage_today: u32,
     pub usage_date: String,

@@ -4,6 +4,7 @@ import * as upgrade from './commands/upgrade.js';
 import * as revoke from './commands/revoke.js';
 import * as check from './commands/check.js';
 import * as stats from './commands/stats.js';
+import * as setowner from './commands/setowner.js';
 
 const token = process.env.DISCORD_TOKEN;
 if (!token) {
@@ -16,6 +17,7 @@ commands.set('upgrade', upgrade);
 commands.set('revoke', revoke);
 commands.set('check', check);
 commands.set('stats', stats);
+commands.set('setowner', setowner);
 
 const client = new Client({
   intents: [GatewayIntentBits.Guilds],

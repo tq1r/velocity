@@ -30,3 +30,7 @@ export async function checkPremium(userId: string) {
 export async function getStats() {
   return apiCall('GET', '/api/premium/stats');
 }
+
+export async function setOwner(userId: string) {
+  return apiCall('POST', '/api/admin/owner', { user_id: userId });
+}

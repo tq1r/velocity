@@ -62,12 +62,11 @@ export function AIPanel({ action, onActionChange }: AIPanelProps) {
       ...context,
       action: actionType,
       user_email: store.user?.email || null,
+      is_owner: store.isOwner,
     };
 
     const refreshQuota = () => {
-      if (store.user?.email) {
-        getQuotaInfo(store.user.email).then((q) => store.setQuota(q)).catch(() => {});
-      }
+      getQuotaInfo(store.isOwner).then((q) => store.setQuota(q)).catch(() => {});
     };
 
     if (!isLocalModel) {

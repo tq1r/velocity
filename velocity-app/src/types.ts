@@ -50,6 +50,7 @@ export interface AIRequest {
   api_key?: string | null;
   model?: string | null;
   user_email?: string | null;
+  is_owner?: boolean;
 }
 
 export interface AIResponse {
@@ -102,7 +103,6 @@ export interface UserSettings {
   ui_scale: number;
   startup_preset: 'ai-engineer' | 'minimal' | 'review-mode';
   animations: boolean;
-  owner_email: string;
   daily_ai_limit: number;
   usage_today: number;
   usage_date: string;

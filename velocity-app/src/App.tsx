@@ -14,7 +14,7 @@ import { OnboardingModal } from './components/OnboardingModal';
 import { SearchPanel } from './components/SearchPanel';
 import { SetupWizard } from './components/SetupWizard';
 import { LoginModal } from './components/LoginModal';
-import { setAuthToken, checkSession, getPremiumStatus } from './lib/api';
+import { setAuthToken, checkSession, getPremiumStatus, getOwnerInfo } from './lib/api';
 
 type SidebarView = 'files' | 'search';
 type AIAction = 'chat' | 'explain' | 'refactor' | 'edit';
@@ -49,7 +49,13 @@ export default function App() {
       checkSession().then((user) => {
         store.setUser(user);
         getPremiumStatus().then((p) => store.setPremium(p)).catch(() => {});
-        getQuotaInfo(user.email || '').then((q) => store.setQuota(q)).catch(() => {});
+        getOwnerInfo().then((ownerInfo) => {
+          const isOwner = ownerInfo.owner_user_id === user.id;
+          store.setIsOwner(isOwner);
+          getQuotaInfo(isOwner).then((q) => store.setQuota(q)).catch(() => {});
+        }).catch(() => {
+          getQuotaInfo(false).then((q) => store.setQuota(q)).catch(() => {});
+        });
       }).catch(() => {
         localStorage.removeItem('velocity-auth-token');
       });

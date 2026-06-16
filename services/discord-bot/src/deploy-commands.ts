@@ -5,6 +5,7 @@ import * as upgrade from './commands/upgrade.js';
 import * as revoke from './commands/revoke.js';
 import * as check from './commands/check.js';
 import * as stats from './commands/stats.js';
+import * as setowner from './commands/setowner.js';
 
 const token = process.env.DISCORD_TOKEN;
 const guildId = process.env.GUILD_ID;
@@ -14,7 +15,7 @@ if (!token || !guildId) {
   process.exit(1);
 }
 
-const commands = [upgrade.data.toJSON(), revoke.data.toJSON(), check.data.toJSON(), stats.data.toJSON()];
+const commands = [upgrade.data.toJSON(), revoke.data.toJSON(), check.data.toJSON(), stats.data.toJSON(), setowner.data.toJSON()];
 
 const rest = new REST({ version: '10' }).setToken(token);
 

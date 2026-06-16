@@ -60,3 +60,11 @@ export function logout(): Promise<{ ok: boolean }> {
 export function getPremiumStatus(): Promise<PremiumStatus> {
   return apiFetch('/api/premium/status');
 }
+
+export interface OwnerInfo {
+  owner_user_id: string | null;
+}
+
+export function getOwnerInfo(): Promise<OwnerInfo> {
+  return apiFetch('/api/admin/owner');
+}

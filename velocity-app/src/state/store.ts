@@ -29,6 +29,7 @@ interface VelocityState {
   user: UserProfile | null;
   premium: PremiumStatus | null;
   quota: QuotaInfo | null;
+  isOwner: boolean;
   setWorkspace: (workspace: WorkspaceSnapshot | null) => void;
   openTab: (tab: EditorTab) => void;
   updateTabContent: (path: string, content: string) => void;
@@ -50,6 +51,7 @@ interface VelocityState {
   setUser: (user: UserProfile | null) => void;
   setPremium: (premium: PremiumStatus | null) => void;
   setQuota: (quota: QuotaInfo | null) => void;
+  setIsOwner: (isOwner: boolean) => void;
 }
 
 export const useVelocityStore = create<VelocityState>((set) => ({
@@ -76,6 +78,7 @@ export const useVelocityStore = create<VelocityState>((set) => ({
   user: null,
   premium: null,
   quota: null,
+  isOwner: false,
   setWorkspace: (workspace) => set({ workspace }),
   openTab: (tab) =>
     set((state) => {
@@ -129,4 +132,5 @@ export const useVelocityStore = create<VelocityState>((set) => ({
   setUser: (user) => set({ user }),
   setPremium: (premium) => set({ premium }),
   setQuota: (quota) => set({ quota }),
+  setIsOwner: (isOwner) => set({ isOwner }),
 }));
