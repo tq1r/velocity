@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useVelocityStore } from '../state/store';
 import { saveSettings } from '../lib/tauri';
 import type { UserSettings } from '../types';
+import { modelPresets, getCurrentPreset, getPresetById } from '../lib/modelPresets';
 
 interface SettingsModalProps {
   onClose: () => void;
@@ -60,58 +61,94 @@ export function SettingsModal({ onClose }: SettingsModalProps) {
           </button>
         </div>
         <div className="modal-body">
-          <div className="settings-group">
-            <div className="settings-group-title">AI Model</div>
-            <div className="settings-row">
-              <span className="settings-label">Use Local Model</span>
-              <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer' }}>
-                <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>
-                  {settings.ai.use_local_model ? 'Velocity Model (offline)' : 'Cloud API'}
-                </span>
-                <input
-                  type="checkbox"
-                  checked={settings.ai.use_local_model}
-                  onChange={(e) => updateAI('use_local_model', e.target.checked)}
-                  style={{ accentColor: 'var(--text-accent)', width: 18, height: 18 }}
-                />
-              </label>
-            </div>
-            {!settings.ai.use_local_model && (
-              <>
-                <div className="settings-row">
-                  <span className="settings-label">Provider</span>
-                  <input className="settings-input" value={settings.ai.provider_name} onChange={(e) => updateAI('provider_name', e.target.value)} />
-                </div>
-                <div className="settings-row">
-                  <span className="settings-label">API Base URL</span>
-                  <input className="settings-input" value={settings.ai.api_base} onChange={(e) => updateAI('api_base', e.target.value)} />
-                </div>
-                <div className="settings-row">
-                  <span className="settings-label">Model</span>
-                  <input className="settings-input" value={settings.ai.model} onChange={(e) => updateAI('model', e.target.value)} />
-                </div>
-                <div className="settings-row">
-                  <span className="settings-label">API Key</span>
-                  <input className="settings-input" type="password" value={settings.ai.api_key || ''} onChange={(e) => updateAI('api_key', e.target.value || null)} placeholder="sk-..." />
-                </div>
-                <div className="settings-row">
-                  <span className="settings-label">Temperature</span>
-                  <input className="settings-input" type="number" min={0} max={2} step={0.1} value={settings.ai.temperature} onChange={(e) => updateAI('temperature', parseFloat(e.target.value) || 0.2)} />
-                </div>
-              </>
-            )}
-            {settings.ai.use_local_model && (
+            <div className="settings-group">
+              <div className="settings-group-title">AI Model</div>
               <div className="settings-row">
-                <span className="settings-label">Status</span>
-                <span style={{ fontSize: 12, color: 'var(--text-accent)', display: 'flex', alignItems: 'center', gap: 6 }}>
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <rect x="4" y="4" width="16" height="16" rx="2"/><path d="M9 9h.01"/><path d="M15 9h.01"/><path d="M9 15h6"/><path d="M9 12h6"/>
-                  </svg>
-                  Local — runs on your machine
-                </span>
+                <span className="settings-label">Use Local Model</span>
+                <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer' }}>
+                  <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>
+                    {settings.ai.use_local_model ? 'Velocity Model (offline)' : 'Cloud API'}
+                  </span>
+                  <input
+                    type="checkbox"
+                    checked={settings.ai.use_local_model}
+                    onChange={(e) => updateAI('use_local_model', e.target.checked)}
+                    style={{ accentColor: 'var(--text-accent)', width: 18, height: 18 }}
+                  />
+                </label>
               </div>
-            )}
-          </div>
+              {!settings.ai.use_local_model && (
+                <>
+                  <div className="settings-row">
+                    <span className="settings-label">Model Preset</span>
+                    <select
+                      className="settings-select"
+                      value={getCurrentPreset(settings)?.id || '__custom__'}
+                      onChange={(e) => {
+                        const id = e.target.value;
+                        if (id === '__custom__') return;
+                        const preset = getPresetById(id);
+                        if (!preset) return;
+                        if (preset.tier === 'premium' && !store.isOwner && !store.premium?.premium) return;
+                        updateAI('provider_name', preset.provider);
+                        updateAI('api_base', preset.apiBase);
+                        updateAI('model', preset.model);
+                      }}
+                    >
+                      <optgroup label="── Free Models ──">
+                        {modelPresets.filter(p => p.tier === 'free').map(p => (
+                          <option key={p.id} value={p.id}>
+                            {p.name} — {p.description}
+                          </option>
+                        ))}
+                      </optgroup>
+                      <optgroup label="── Premium Models ──">
+                        {modelPresets.filter(p => p.tier === 'premium').map(p => {
+                          const locked = p.tier === 'premium' && !store.isOwner && !store.premium?.premium;
+                          return (
+                            <option key={p.id} value={p.id} disabled={locked}>
+                              {locked ? '🔒 ' : '✨ '}{p.name} — {p.description}
+                            </option>
+                          );
+                        })}
+                      </optgroup>
+                      <option value="__custom__">── Custom Configuration ──</option>
+                    </select>
+                  </div>
+                  <div className="settings-row">
+                    <span className="settings-label">Provider</span>
+                    <input className="settings-input" value={settings.ai.provider_name} onChange={(e) => updateAI('provider_name', e.target.value)} />
+                  </div>
+                  <div className="settings-row">
+                    <span className="settings-label">API Base URL</span>
+                    <input className="settings-input" value={settings.ai.api_base} onChange={(e) => updateAI('api_base', e.target.value)} />
+                  </div>
+                  <div className="settings-row">
+                    <span className="settings-label">Model</span>
+                    <input className="settings-input" value={settings.ai.model} onChange={(e) => updateAI('model', e.target.value)} />
+                  </div>
+                  <div className="settings-row">
+                    <span className="settings-label">API Key</span>
+                    <input className="settings-input" type="password" value={settings.ai.api_key || ''} onChange={(e) => updateAI('api_key', e.target.value || null)} placeholder="sk-..." />
+                  </div>
+                  <div className="settings-row">
+                    <span className="settings-label">Temperature</span>
+                    <input className="settings-input" type="number" min={0} max={2} step={0.1} value={settings.ai.temperature} onChange={(e) => updateAI('temperature', parseFloat(e.target.value) || 0.2)} />
+                  </div>
+                </>
+              )}
+              {settings.ai.use_local_model && (
+                <div className="settings-row">
+                  <span className="settings-label">Status</span>
+                  <span style={{ fontSize: 12, color: 'var(--text-accent)', display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <rect x="4" y="4" width="16" height="16" rx="2"/><path d="M9 9h.01"/><path d="M15 9h.01"/><path d="M9 15h6"/><path d="M9 12h6"/>
+                    </svg>
+                    Local — runs on your machine
+                  </span>
+                </div>
+              )}
+            </div>
           <div className="settings-group">
             <div className="settings-group-title">Appearance</div>
             <div className="settings-row">
