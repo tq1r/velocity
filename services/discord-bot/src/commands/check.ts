@@ -21,14 +21,14 @@ export async function execute(interaction: CommandInteraction) {
     await interaction.editReply({
       content: [
         `**User:** ${result.name || userId}`,
-        `**Premium:** ${result.premium ? '✅ Active' : '❌ Inactive'}`,
+        `**Premium:** ${result.premium ? '[ACTIVE]' : '[INACTIVE]'}`,
         `**Tier:** ${tier}`,
         `**Expires:** ${expires}`,
       ].join('\n'),
     });
   } catch (err) {
     await interaction.editReply({
-      content: `❌ Failed: ${err instanceof Error ? err.message : String(err)}`,
+      content: `[FAILED] ${err instanceof Error ? err.message : String(err)}`,
     });
   }
 }

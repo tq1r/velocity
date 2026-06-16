@@ -13,7 +13,7 @@ export async function execute(interaction: CommandInteraction) {
     const stats = await getStats();
     await interaction.editReply({
       content: [
-        '**📊 Premium Statistics**',
+        '**[PREMIUM STATISTICS]**',
         `Total users: **${stats.total_users}**`,
         `Lifetime premium: **${stats.lifetime_premium}**`,
         `Active monthly: **${stats.active_monthly}**`,
@@ -22,7 +22,7 @@ export async function execute(interaction: CommandInteraction) {
     });
   } catch (err) {
     await interaction.editReply({
-      content: `❌ Failed: ${err instanceof Error ? err.message : String(err)}`,
+      content: `[FAILED] ${err instanceof Error ? err.message : String(err)}`,
     });
   }
 }

@@ -14,11 +14,11 @@ export async function execute(interaction: CommandInteraction) {
   try {
     await revokePremium(userId);
     await interaction.editReply({
-      content: `✅ Premium revoked for **${userId}**.`,
+      content: `[OK] Premium revoked for **${userId}**.`,
     });
   } catch (err) {
     await interaction.editReply({
-      content: `❌ Failed: ${err instanceof Error ? err.message : String(err)}`,
+      content: `[FAILED] ${err instanceof Error ? err.message : String(err)}`,
     });
   }
 }

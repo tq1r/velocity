@@ -102,12 +102,12 @@ export function SettingsModal({ onClose }: SettingsModalProps) {
                           </option>
                         ))}
                       </optgroup>
-                      <optgroup label="── Premium Models ──">
+                      <optgroup label="── Premium Models [PREMIUM] ──">
                         {modelPresets.filter(p => p.tier === 'premium').map(p => {
                           const locked = p.tier === 'premium' && !store.isOwner && !store.premium?.premium;
                           return (
                             <option key={p.id} value={p.id} disabled={locked}>
-                              {locked ? '🔒 ' : '✨ '}{p.name} — {p.description}
+                              {locked ? '[LOCKED] ' : ''}{p.name} — {p.description}
                             </option>
                           );
                         })}
@@ -200,11 +200,11 @@ export function SettingsModal({ onClose }: SettingsModalProps) {
                 <span className="settings-label">Account</span>
                 <span style={{ fontSize: 12, display: 'flex', alignItems: 'center', gap: 6 }}>
                   {store.isOwner ? (
-                    <><span style={{ color: 'var(--text-accent)' }}>👑 Owner</span> — unlimited, unrestricted</>
+                    <><span className="quota-badge" style={{ color: 'var(--text-accent)' }}>OWNER</span> unlimited unrestricted</>
                   ) : store.premium?.premium ? (
-                    <><span style={{ color: 'var(--text-accent)' }}>✨ Premium</span> — {store.premium.tier}</>
+                    <><span className="quota-badge" style={{ color: 'var(--text-accent)' }}>PREMIUM</span> {store.premium.tier}</>
                   ) : (
-                    <><span style={{ color: 'var(--text-muted)' }}>Free</span> — {settings.daily_ai_limit}/day</>
+                    <><span className="quota-badge" style={{ color: 'var(--text-muted)' }}>FREE</span> {settings.daily_ai_limit}/day</>
                   )}
                 </span>
               </div>

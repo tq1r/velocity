@@ -15,11 +15,11 @@ export async function execute(interaction: CommandInteraction) {
   try {
     const result = await setOwner(userId);
     await interaction.editReply({
-      content: `👑 Owner set to **${result.owner_user_id}**. This user now has unlimited AI and no restrictions.`,
+      content: `[OWNER] Owner set to **${result.owner_user_id}**. This user now has unlimited AI and no restrictions.`,
     });
   } catch (err) {
     await interaction.editReply({
-      content: `❌ Failed: ${err instanceof Error ? err.message : String(err)}`,
+      content: `[FAILED] ${err instanceof Error ? err.message : String(err)}`,
     });
   }
 }

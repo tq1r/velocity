@@ -19,11 +19,11 @@ export async function execute(interaction: CommandInteraction) {
   try {
     const result = await upgradeUser(userId, tier);
     await interaction.editReply({
-      content: `✅ **${result.user?.name || userId}** upgraded to **${tier}** premium.`,
+      content: `[OK] **${result.user?.name || userId}** upgraded to **${tier}** premium.`,
     });
   } catch (err) {
     await interaction.editReply({
-      content: `❌ Failed: ${err instanceof Error ? err.message : String(err)}`,
+      content: `[FAILED] ${err instanceof Error ? err.message : String(err)}`,
     });
   }
 }
