@@ -1,0 +1,17 @@
+node_modules/
+target/
+dist/
+*.log
+.env
+.DS_Store
+Thumbs.db
+*.zip
+zed-main/
+
+# API is separate repo with its own CI/deployment
+services/api/
+
+# IDE
+.vscode/
+.idea/
+
