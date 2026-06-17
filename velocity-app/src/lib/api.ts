@@ -12,8 +12,18 @@ let authToken: string | null = localStorage.getItem('velocity-auth-token');
 
 export function setAuthToken(token: string | null) {
   authToken = token;
-  if (token) localStorage.setItem('velocity-auth-token', token);
-  else localStorage.removeItem('velocity-auth-token');
+  if (token) {
+    localStorage.setItem('velocity-auth-token', token);
+    try {
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      if (payload.githubToken) {
+        localStorage.setItem('velocity-github-token', payload.githubToken);
+      }
+    } catch {}
+  } else {
+    localStorage.removeItem('velocity-auth-token');
+    localStorage.removeItem('velocity-github-token');
+  }
 }
 
 export function getAuthToken() {

@@ -9,6 +9,13 @@ export interface ModelPreset {
 }
 
 export const modelPresets: ModelPreset[] = [
+  // GitHub Models (free, no API key needed when signed in)
+  { label: 'GitHub: GPT-4o Mini', provider: 'github', api_base: 'https://models.inference.ai.azure.com', model: 'gpt-4o-mini', tier: 'free' },
+  { label: 'GitHub: GPT-4o', provider: 'github', api_base: 'https://models.inference.ai.azure.com', model: 'gpt-4o', tier: 'free' },
+  { label: 'GitHub: DeepSeek V3', provider: 'github', api_base: 'https://models.inference.ai.azure.com', model: 'DeepSeek-V3', tier: 'free' },
+  { label: 'GitHub: Mistral Large', provider: 'github', api_base: 'https://models.inference.ai.azure.com', model: 'Mistral-large', tier: 'free' },
+  { label: 'GitHub: Phi-3.5 MoE', provider: 'github', api_base: 'https://models.inference.ai.azure.com', model: 'Phi-3.5-MoE-instruct', tier: 'free' },
+  // API-key based models
   // ── Free Tier (200 req/day) ──
   {
     id: 'gpt-4o-mini',

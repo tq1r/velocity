@@ -77,7 +77,7 @@ export function AIPanel({ action, onActionChange }: AIPanelProps) {
       getQuotaInfo(store.isOwner).then((q) => store.setQuota(q)).catch(() => {});
     };
 
-    const canStream = isDesktopApp && (hasApiKey || isLocalModel);
+    const canStream = isDesktopApp && (hasApiKey || isLocalModel) && store.settings?.ai?.provider_name !== 'github';
 
     if (canStream && !isLocalModel) {
       try {

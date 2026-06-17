@@ -196,7 +196,24 @@ export const runAIRequest = async (request: AIRequest): Promise<AIResponse> => {
     try { return await tauriInvoke('run_ai_request', { request }); } catch {}
   }
   const settings = await getSettings();
-  // try proxy first (no API key needed, uses server-side keys)
+  // try GitHub Models first (free, uses OAuth token)
+  const githubToken = localStorage.getItem('velocity-github-token');
+  if (githubToken && settings.ai.provider_name === 'github') {
+    try {
+      const res = await fetch('https://models.inference.ai.azure.com/chat/completions', {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${githubToken}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ model: settings.ai.model, messages: request.messages, temperature: request.temperature ?? settings.ai.temperature }),
+      });
+      const data = await res.json();
+      const content = data.choices?.[0]?.message?.content;
+      if (content) return { content };
+      return { content: `[response received - check output]` };
+    } catch (e: any) {
+      return { content: `GitHub Models error: ${e.message}. Try signing in again.` };
+    }
+  }
+  // try proxy next (no API key needed, uses server-side keys)
   const token = localStorage.getItem('velocity-auth-token');
   if (!settings.ai.api_key && token) {
     try {
@@ -240,7 +257,7 @@ export const runAIRequest = async (request: AIRequest): Promise<AIResponse> => {
       return { content: `API error: ${e.message}. Check your API key in Settings.` };
     }
   }
-  return { content: 'AI is not configured. Open Settings to set up an AI provider, or sign in to use the cloud proxy.' };
+  return { content: 'Sign in with GitHub to use AI, or add your own API key in Settings.' };
 };
 
 export const searchFiles = async (query: string): Promise<string[]> => {
