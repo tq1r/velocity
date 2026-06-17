@@ -71,6 +71,23 @@ export default function App() {
       });
     }
 
+    // handle OAuth redirect callback — token in URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const urlToken = urlParams.get('token');
+    if (urlToken) {
+      setAuthToken(urlToken);
+      checkSession().then((user) => {
+        store.setUser(user);
+        getPremiumStatus().then((p) => store.setPremium(p)).catch(() => {});
+        getOwnerInfo().then((ownerInfo) => {
+          store.setIsOwner(ownerInfo.owner_user_id === user.id);
+          getQuotaInfo(ownerInfo.owner_user_id === user.id).then((q) => store.setQuota(q)).catch(() => {});
+        }).catch(() => {});
+      }).catch(() => {});
+      // clean URL without reload
+      window.history.replaceState({}, '', window.location.pathname);
+    }
+
     const checkSetup = async () => {
       try {
         const settings = await getSettings();

@@ -56,7 +56,8 @@ export interface PremiumStatus {
 }
 
 export function getAuthUrl(provider: 'github' | 'google'): string {
-  return `${getApiBase()}/api/auth/${provider}`;
+  const origin = encodeURIComponent(window.location.origin);
+  return `${getApiBase()}/api/auth/${provider}?redirect=${origin}`;
 }
 
 export function checkSession(): Promise<UserProfile> {
