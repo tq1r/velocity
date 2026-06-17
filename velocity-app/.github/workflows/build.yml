@@ -56,14 +56,20 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Build Tauri app
+      - name: Build Tauri app (signed for release tags)
         run: npx tauri build --bundles msi
+        env:
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
 
       - name: Upload MSI installer
         uses: actions/upload-artifact@v4
         with:
           name: velocity-windows-installer
-          path: ${{ env.APP_DIR }}/src-tauri/target/release/bundle/msi/*.msi
+          path: |
+            ${{ env.APP_DIR }}/src-tauri/target/release/bundle/msi/*.msi
+            ${{ env.APP_DIR }}/src-tauri/target/release/bundle/msi/*.msi.sig
+            ${{ env.APP_DIR }}/src-tauri/target/release/bundle/msi/*.msi.zip
           if-no-files-found: warn
 
   release:
@@ -75,8 +81,33 @@ jobs:
       - uses: actions/download-artifact@v4
         with:
           name: velocity-windows-installer
+
+      - name: Generate update.json
+        shell: pwsh
+        run: |
+          $tag = "${{ github.ref_name }}"
+          $version = $tag.TrimStart('v')
+          $msi = Get-ChildItem -Filter "*.msi" | Select-Object -First 1
+          $sig = Get-ChildItem -Filter "*.msi.sig" | Select-Object -First 1
+          $sigContent = Get-Content $sig.FullName -Raw
+          $msiName = $msi.Name
+          $updateJson = @{
+            version = $version
+            notes = "See the release notes for details."
+            pub_date = (Get-Date -Format "yyyy-MM-ddTHH:mm:ssZ")
+            platforms = @{
+              "windows-x86_64" = @{
+                signature = $sigContent.Trim()
+                url = "https://github.com/tq1r/velocity/releases/download/$tag/$msiName"
+              }
+            }
+          }
+          $updateJson | ConvertTo-Json | Set-Content "latest.json"
+
       - uses: softprops/action-gh-release@v2
         with:
           files: |
             *.msi
+            *.msi.sig
+            latest.json
           generate_release_notes: true

@@ -14,6 +14,8 @@ let tauriInvoke: any = null;
 let tauriListen: any = null;
 let tauriDialogOpen: any = null;
 
+export const isDesktopApp = typeof window !== 'undefined' && (window as any).__TAURI__?.invoke != null;
+
 async function initTauri() {
   try {
     const core = await import('@tauri-apps/api/core');
@@ -332,4 +334,33 @@ export const getInlineCompletion = async (prefix: string, suffix: string, langua
     try { return await tauriInvoke('get_inline_completion', { prefix, suffix, language }); } catch {}
   }
   return '';
+};
+
+interface UpdateInfo {
+  version: string;
+  available: boolean;
+  notes?: string;
+}
+
+export const checkForUpdates = async (): Promise<UpdateInfo> => {
+  try {
+    const updater = await import('@tauri-apps/plugin-updater');
+    const check = await updater.check();
+    if (check) {
+      return { version: check.version, available: true, notes: check.body || '' };
+    }
+    return { version: '', available: false };
+  } catch {
+    return { version: '', available: false };
+  }
+};
+
+export const installUpdate = async (): Promise<void> => {
+  try {
+    const updater = await import('@tauri-apps/plugin-updater');
+    const check = await updater.check();
+    if (check) {
+      await check.downloadAndInstall();
+    }
+  } catch {}
 };

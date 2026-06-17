@@ -40,5 +40,14 @@
       "icons/icon.png",
       "icons/icon.ico"
     ]
+  },
+  "plugins": {
+    "updater": {
+      "active": true,
+      "endpoints": [
+        "https://github.com/tq1r/velocity/releases/latest/download/latest.json"
+      ],
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDQxOUY2ODdFREZDMTE4OEEKUldTS0dNSGZmbWlmUWFUd1dabUJmRGw4eG9rRmplYjZqbjNFY1c1cEpIbjczeDZNWitQdFRnOTIK"
+    }
   }
 }

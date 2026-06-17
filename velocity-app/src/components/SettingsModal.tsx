@@ -3,6 +3,60 @@ import { useVelocityStore } from '../state/store';
 import { saveSettings } from '../lib/tauri';
 import type { UserSettings } from '../types';
 import { modelPresets, getCurrentPreset, getPresetById } from '../lib/modelPresets';
+import { isDesktopApp, checkForUpdates, installUpdate } from '../lib/tauri';
+
+function UpdateCheck() {
+  const [status, setStatus] = useState<'idle' | 'checking' | 'available' | 'updating' | 'current'>('idle');
+  const [version, setVersion] = useState('');
+
+  const handleCheck = useCallback(async () => {
+    if (!isDesktopApp) return;
+    setStatus('checking');
+    try {
+      const info = await checkForUpdates();
+      if (info.available) {
+        setStatus('available');
+        setVersion(info.version);
+      } else {
+        setStatus('current');
+      }
+    } catch {
+      setStatus('current');
+    }
+  }, []);
+
+  const handleInstall = useCallback(async () => {
+    setStatus('updating');
+    try {
+      await installUpdate();
+    } catch {}
+  }, []);
+
+  if (!isDesktopApp) return null;
+
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+      {status === 'idle' && (
+        <button className="ai-action-btn" onClick={handleCheck} style={{ fontSize: 11 }}>Check for Updates</button>
+      )}
+      {status === 'checking' && (
+        <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>Checking...</span>
+      )}
+      {status === 'available' && (
+        <>
+          <span style={{ fontSize: 11, color: 'var(--text-accent)' }}>Update v{version} available</span>
+          <button className="ai-action-btn active" onClick={handleInstall} style={{ fontSize: 11 }}>Install</button>
+        </>
+      )}
+      {status === 'updating' && (
+        <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>Downloading & installing...</span>
+      )}
+      {status === 'current' && (
+        <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>Up to date</span>
+      )}
+    </div>
+  );
+}
 
 interface SettingsModalProps {
   onClose: () => void;
@@ -215,9 +269,14 @@ export function SettingsModal({ onClose }: SettingsModalProps) {
               <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>{store.isOwner ? 'Owner bypasses limits' : '0 = unlimited'}</span>
             </div>
           </div>
-          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, marginTop: 20 }}>
-            <button className="ai-action-btn" onClick={onClose}>Cancel</button>
-            <button className="ai-action-btn active" onClick={handleSave}>Save Settings</button>
+          <div style={{ display: 'flex', justifyContent: 'space-between', gap: 8, marginTop: 20 }}>
+            <div>
+              <UpdateCheck />
+            </div>
+            <div style={{ display: 'flex', gap: 8 }}>
+              <button className="ai-action-btn" onClick={onClose}>Cancel</button>
+              <button className="ai-action-btn active" onClick={handleSave}>Save Settings</button>
+            </div>
           </div>
         </div>
       </div>
