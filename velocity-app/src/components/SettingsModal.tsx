@@ -129,7 +129,7 @@ export function SettingsModal({ onClose }: SettingsModalProps) {
                   </div>
                   <div className="settings-row">
                     <span className="settings-label">API Key</span>
-                    <input className="settings-input" type="password" value={settings.ai.api_key || ''} onChange={(e) => updateAI('api_key', e.target.value || null)} placeholder="sk-..." />
+                    <input className="settings-input" type="password" value={settings.ai.api_key || ''} onChange={(e) => updateAI('api_key', e.target.value || null)} placeholder={settings.ai.provider_name === 'github' ? 'Optional — uses GitHub token' : 'sk-...'} />
                   </div>
                   <div className="settings-row">
                     <span className="settings-label">Temperature</span>

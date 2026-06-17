@@ -60,7 +60,7 @@ export function AIPanel({ action, onActionChange }: AIPanelProps) {
 
     const hasApiKey = !!store.settings?.ai?.api_key;
     if (!isLocalModel && !hasApiKey && !store.user) {
-      store.pushAIMessage({ role: 'assistant', content: 'Sign in to use AI, or add your own API key in Settings.' });
+      store.pushAIMessage({ role: 'assistant', content: 'Sign in with GitHub to use AI, or add your own API key in Settings.' });
       store.setAiWorking(false);
       return;
     }
