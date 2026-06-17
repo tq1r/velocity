@@ -56,8 +56,28 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Create swap space
+        run: |
+          echo "Creating swap file..."
+          $swappath = "$env:USERPROFILE\swap.sys"
+          fsutil file createnew $swappath 4GB
+          Write-Host "Swap file created, enabling..."
+          # Use PowerShell to create a pagefile
+          $computer = Get-WmiObject Win32_ComputerSystem
+          $computer.AutomaticManagedPagefile = $false
+          $computer.Put() | Out-Null
+          $pagefile = Get-WmiObject Win32_PageFileSetting
+          if ($pagefile) {
+            $pagefile.Delete() | Out-Null
+          }
+          $newPagefile = Set-WmiInstance -Class Win32_PageFileSetting -Arguments @{ Name = $swappath; InitialSize = 4096; MaximumSize = 4096 }
+          Write-Host "Swap added: 4GB"
+
       - name: Build Tauri app
         run: npx tauri build --bundles msi
+        env:
+          CARGO_BUILD_JOBS: 2
+          RUSTFLAGS: -C codegen-units=1 -C debuginfo=0
 
       - name: Upload MSI installer
         uses: actions/upload-artifact@v4
