@@ -1,6 +1,6 @@
 import { useCallback, useState } from 'react';
 import { useVelocityStore } from '../state/store';
-import { getAuthUrl, setAuthToken, logout } from '../lib/api';
+import { getAuthUrl, setAuthToken, checkSession, getPremiumStatus, getOwnerInfo, logout } from '../lib/api';
 
 interface LoginModalProps {
   onClose: () => void;
@@ -12,8 +12,41 @@ export function LoginModal({ onClose }: LoginModalProps) {
 
   const handleAuth = useCallback(async (provider: 'github' | 'google') => {
     setLoading(true);
-    window.location.href = getAuthUrl(provider);
-  }, []);
+    const url = getAuthUrl(provider);
+    try {
+      const { WebviewWindow } = await import('@tauri-apps/api/webviewWindow');
+      const existing = await WebviewWindow.getByLabel('oauth');
+      if (existing) await existing.close();
+      const oauth = new WebviewWindow('oauth', {
+        url,
+        width: 800,
+        height: 700,
+        title: 'Sign in to Velocity',
+        center: true,
+        resizable: false,
+      });
+      oauth.once('tauri://error', () => setLoading(false));
+      oauth.once('tauri://destroyed', () => {
+        const token = localStorage.getItem('velocity-auth-token');
+        if (token) {
+          setAuthToken(token);
+          setLoading(false);
+          onClose();
+          checkSession().then((user) => {
+            store.setUser(user);
+            getPremiumStatus().then((p) => store.setPremium(p)).catch(() => {});
+            getOwnerInfo().then((info) => {
+              store.setIsOwner(info.owner_user_id === user.id);
+            }).catch(() => {});
+          }).catch(() => {});
+        } else {
+          setLoading(false);
+        }
+      });
+    } catch {
+      window.location.href = url;
+    }
+  }, [onClose]);
 
   const handleLogout = useCallback(async () => {
     try { await logout(); } catch {}

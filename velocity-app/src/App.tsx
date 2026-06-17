@@ -74,7 +74,7 @@ export default function App() {
     }
 
     // handle OAuth redirect callback — token in URL
-    const urlParams = new URLSearchParams(window.location.search);
+      const urlParams = new URLSearchParams(window.location.search);
     const urlToken = urlParams.get('token');
     if (urlToken) {
       setAuthToken(urlToken);
@@ -85,6 +85,16 @@ export default function App() {
           store.setIsOwner(ownerInfo.owner_user_id === user.id);
           getQuotaInfo(ownerInfo.owner_user_id === user.id).then((q) => store.setQuota(q)).catch(() => {});
         }).catch(() => {});
+        // If this is an OAuth popup window, close it
+        (async () => {
+          try {
+            const { getCurrentWebviewWindow } = await import('@tauri-apps/api/webviewWindow');
+            const win = getCurrentWebviewWindow();
+            if (win.label !== 'main') {
+              win.close();
+            }
+          } catch {}
+        })();
       }).catch(() => {});
       // clean URL without reload
       window.history.replaceState({}, '', window.location.pathname);

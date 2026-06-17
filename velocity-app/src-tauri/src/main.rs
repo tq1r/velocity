@@ -23,6 +23,7 @@ fn main() {
 
     tauri::Builder::default()
         .plugin(tauri_plugin_dialog::init())
+        .plugin(tauri_plugin_shell::init())
         .manage(AppState {
             workspace_root: Mutex::new(None),
             index: Mutex::new(None),
