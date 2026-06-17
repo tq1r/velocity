@@ -2,7 +2,7 @@ export interface FileNode {
   name: string;
   path: string;
   is_dir: boolean;
-  children: FileNode[];
+  children?: FileNode[];
 }
 
 export interface IndexedFileSummary {
@@ -22,6 +22,7 @@ export interface IndexSummary {
 
 export interface WorkspaceSnapshot {
   root_path: string;
+  root?: string;
   tree: FileNode;
   index_summary: IndexSummary;
   indexed_files: IndexedFileSummary[];
@@ -51,13 +52,16 @@ export interface AIRequest {
   model?: string | null;
   user_email?: string | null;
   is_owner?: boolean;
+  temperature?: number;
+  max_tokens?: number;
 }
 
 export interface AIResponse {
-  message: string;
+  message?: string;
+  content?: string;
   diff?: string | null;
   rewrite?: string | null;
-  referenced_files: string[];
+  referenced_files?: string[];
 }
 
 // Browser fallback responses use 'content' instead of 'message'
@@ -86,6 +90,8 @@ export interface PremiumStatus {
 export interface DiffApplyResult {
   changed_files: string[];
   summary: string;
+  success?: boolean;
+  message?: string;
 }
 
 export interface QuotaInfo {

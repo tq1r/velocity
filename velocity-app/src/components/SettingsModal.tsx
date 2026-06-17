@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useVelocityStore } from '../state/store';
 import { saveSettings } from '../lib/tauri';
 import type { UserSettings } from '../types';

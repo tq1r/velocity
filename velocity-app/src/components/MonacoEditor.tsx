@@ -106,7 +106,7 @@ export function MonacoEditor({ content, language, path, onChange, onSelectionCha
     }
 
     monacoInstance.languages.registerInlineCompletionsProvider('*', {
-      provideInlineCompletions: async (model, position) => {
+      provideInlineCompletions: async (model: any, position: any) => {
         const offset = model.getOffsetAt(position);
         const fullText = model.getValue();
         const prefix = fullText.substring(0, offset);
@@ -209,7 +209,7 @@ export function MonacoEditor({ content, language, path, onChange, onSelectionCha
         lineDecorationsWidth: 8,
         lineNumbersMinChars: 3,
         inlineSuggest: { enabled: true },
-        suggest: { showInline: true },
+        suggest: { showInline: true } as any,
       }}
       loading={
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: 'var(--text-muted)' }}>

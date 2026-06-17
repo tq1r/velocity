@@ -110,7 +110,7 @@ export const openWorkspace = async (path: string): Promise<WorkspaceSnapshot> =>
   }
   const fs = ls();
   const files = Object.keys(fs).filter(k => k.startsWith(path));
-  return { root: path, tree: { name: path, path, is_dir: true, children: buildTree(files) } };
+  return { root: path, tree: { name: path, path, is_dir: true, children: buildTree(files) as FileNode[] } } as unknown as WorkspaceSnapshot;
 };
 
 export const getWorkspaceSnapshot = async (): Promise<WorkspaceSnapshot | null> => {
@@ -160,7 +160,7 @@ export const createEntry = async (parentPath: string, name: string, isDirectory:
     if (!(fullPath in fs)) { fs[fullPath] = ''; lsWrite(fs); }
   }
   const ws = await getWorkspaceSnapshot();
-  return ws || { root: '', tree: { name: '', path: '', is_dir: true, children: [] } };
+  return ws || ({ root: '', tree: { name: '', path: '', is_dir: true, children: [] } } as unknown as WorkspaceSnapshot);
 };
 
 export const renameEntry = async (path: string, newName: string): Promise<WorkspaceSnapshot> => {
@@ -173,7 +173,7 @@ export const renameEntry = async (path: string, newName: string): Promise<Worksp
     if (k === path || k.startsWith(path + '/')) { fs[newPath + k.slice(path.length)] = fs[k]; delete fs[k]; }
   }
   lsWrite(fs);
-  return (await getWorkspaceSnapshot()) || { root: '', tree: { name: '', path: '', is_dir: true, children: [] } };
+  return (await getWorkspaceSnapshot()) || ({ root: '', tree: { name: '', path: '', is_dir: true, children: [] } } as unknown as WorkspaceSnapshot);
 };
 
 export const deleteEntry = async (path: string): Promise<WorkspaceSnapshot> => {
@@ -183,14 +183,14 @@ export const deleteEntry = async (path: string): Promise<WorkspaceSnapshot> => {
   const fs = ls(); const entries = Object.keys(fs);
   for (const k of entries) { if (k === path || k.startsWith(path + '/')) delete fs[k]; }
   lsWrite(fs);
-  return (await getWorkspaceSnapshot()) || { root: '', tree: { name: '', path: '', is_dir: true, children: [] } };
+  return (await getWorkspaceSnapshot()) || ({ root: '', tree: { name: '', path: '', is_dir: true, children: [] } } as unknown as WorkspaceSnapshot);
 };
 
 export const applyUnifiedDiff = async (diff: string): Promise<DiffApplyResult> => {
   if (tauriInvoke) {
     try { return await tauriInvoke('apply_unified_diff', { diff }); } catch {}
   }
-  return { success: true, message: 'Diff apply not available in browser mode' };
+  return { success: true, message: 'Diff apply not available in browser mode' } as unknown as DiffApplyResult;
 };
 
 export const runAIRequest = async (request: AIRequest): Promise<AIResponse> => {
