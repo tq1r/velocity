@@ -68,3 +68,15 @@ export interface OwnerInfo {
 export function getOwnerInfo(): Promise<OwnerInfo> {
   return apiFetch('/api/admin/owner');
 }
+
+export interface ProxyChatRequest {
+  provider: string;
+  messages: any[];
+  model: string;
+  temperature?: number;
+  max_tokens?: number;
+}
+
+export function proxyAiChat(body: ProxyChatRequest): Promise<any> {
+  return apiFetch('/api/ai/chat', { method: 'POST', body: JSON.stringify(body) });
+}

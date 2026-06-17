@@ -196,6 +196,22 @@ export const runAIRequest = async (request: AIRequest): Promise<AIResponse> => {
     try { return await tauriInvoke('run_ai_request', { request }); } catch {}
   }
   const settings = await getSettings();
+  // try proxy first (no API key needed, uses server-side keys)
+  const token = localStorage.getItem('velocity-auth-token');
+  if (!settings.ai.api_key && token) {
+    try {
+      const { proxyAiChat } = await import('./api');
+      const data = await proxyAiChat({
+        provider: settings.ai.provider_name,
+        messages: request.messages,
+        model: settings.ai.model || 'gpt-4',
+        temperature: request.temperature ?? settings.ai.temperature,
+      });
+      const content = data.choices?.[0]?.message?.content;
+      if (content) return { content };
+    } catch {}
+  }
+  // local API key fallback
   if (settings.ai.api_key) {
     try {
       const provider = settings.ai.provider_name;
@@ -221,10 +237,10 @@ export const runAIRequest = async (request: AIRequest): Promise<AIResponse> => {
       if (data.candidates?.[0]?.content?.parts?.[0]?.text) return { content: data.candidates[0].content.parts[0].text };
       return { content: `[response received - check Settings]` };
     } catch (e: any) {
-      return { content: `API error: ${e.message}. Set your API key in Settings.` };
+      return { content: `API error: ${e.message}. Check your API key in Settings.` };
     }
   }
-  return { content: 'Set your API key in Settings (gear icon) to use AI, or enable the local Velocity Model.' };
+  return { content: 'AI is not configured. Open Settings to set up an AI provider, or sign in to use the cloud proxy.' };
 };
 
 export const searchFiles = async (query: string): Promise<string[]> => {

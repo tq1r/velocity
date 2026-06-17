@@ -48,12 +48,6 @@ export function AIPanel({ action, onActionChange }: AIPanelProps) {
   const handleSend = useCallback(async () => {
     if (!input.trim() || store.isAiWorking) return;
 
-    const hasApiKey = store.settings?.ai?.api_key;
-    if (!isLocalModel && !hasApiKey) {
-      store.pushAIMessage({ role: 'assistant', content: 'No API key configured. Open Settings (gear icon) to set up an AI provider.' });
-      return;
-    }
-
     const userMsg: AIChatMessage = { role: 'user', content: input };
     store.pushAIMessage(userMsg);
     setInput('');
@@ -63,6 +57,13 @@ export function AIPanel({ action, onActionChange }: AIPanelProps) {
 
     const context = getModelContext();
     const actionType = action === 'edit' ? 'apply_diff' : action === 'explain' ? 'explain' : action === 'refactor' ? 'refactor' : 'chat';
+
+    const hasApiKey = !!store.settings?.ai?.api_key;
+    if (!isLocalModel && !hasApiKey && !store.user) {
+      store.pushAIMessage({ role: 'assistant', content: 'Sign in to use AI, or add your own API key in Settings.' });
+      store.setAiWorking(false);
+      return;
+    }
 
     const request: AIRequest = {
       messages: [...store.aiMessages, userMsg],
@@ -76,7 +77,9 @@ export function AIPanel({ action, onActionChange }: AIPanelProps) {
       getQuotaInfo(store.isOwner).then((q) => store.setQuota(q)).catch(() => {});
     };
 
-    if (isDesktopApp && !isLocalModel) {
+    const canStream = isDesktopApp && (hasApiKey || isLocalModel);
+
+    if (canStream && !isLocalModel) {
       try {
         await startAiStream(request);
 
