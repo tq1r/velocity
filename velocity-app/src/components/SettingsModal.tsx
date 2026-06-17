@@ -3,33 +3,28 @@ import { useVelocityStore } from '../state/store';
 import { saveSettings } from '../lib/tauri';
 import type { UserSettings } from '../types';
 import { modelPresets, getCurrentPreset, getPresetById } from '../lib/modelPresets';
-import { isDesktopApp, checkForUpdates, installUpdate } from '../lib/tauri';
+import { isDesktopApp, checkForUpdates } from '../lib/tauri';
+
+const APP_VERSION = '0.1.0';
 
 function UpdateCheck() {
-  const [status, setStatus] = useState<'idle' | 'checking' | 'available' | 'updating' | 'current'>('idle');
-  const [version, setVersion] = useState('');
+  const [status, setStatus] = useState<'idle' | 'checking' | 'available' | 'current'>('idle');
+  const [info, setInfo] = useState<{ version: string; url: string } | null>(null);
 
   const handleCheck = useCallback(async () => {
     if (!isDesktopApp) return;
     setStatus('checking');
     try {
-      const info = await checkForUpdates();
-      if (info.available) {
+      const result = await checkForUpdates(APP_VERSION);
+      if (result.available) {
         setStatus('available');
-        setVersion(info.version);
+        setInfo({ version: result.version, url: result.url });
       } else {
         setStatus('current');
       }
     } catch {
       setStatus('current');
     }
-  }, []);
-
-  const handleInstall = useCallback(async () => {
-    setStatus('updating');
-    try {
-      await installUpdate();
-    } catch {}
   }, []);
 
   if (!isDesktopApp) return null;
@@ -42,17 +37,16 @@ function UpdateCheck() {
       {status === 'checking' && (
         <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>Checking...</span>
       )}
-      {status === 'available' && (
+      {status === 'available' && info && (
         <>
-          <span style={{ fontSize: 11, color: 'var(--text-accent)' }}>Update v{version} available</span>
-          <button className="ai-action-btn active" onClick={handleInstall} style={{ fontSize: 11 }}>Install</button>
+          <span style={{ fontSize: 11, color: 'var(--text-accent)' }}>v{info.version} available</span>
+          <a href={info.url} target="_blank" rel="noreferrer" className="ai-action-btn active" style={{ fontSize: 11, textDecoration: 'none', display: 'inline-flex', alignItems: 'center', padding: '4px 10px' }}>
+            Download
+          </a>
         </>
       )}
-      {status === 'updating' && (
-        <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>Downloading & installing...</span>
-      )}
       {status === 'current' && (
-        <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>Up to date</span>
+        <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>v{APP_VERSION} is up to date</span>
       )}
     </div>
   );

@@ -16,7 +16,3 @@ services/api/
 .vscode/
 .idea/
 
-# Update signing keys
-update-key
-update-key.pub
-

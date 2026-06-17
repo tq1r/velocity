@@ -339,28 +339,28 @@ export const getInlineCompletion = async (prefix: string, suffix: string, langua
 interface UpdateInfo {
   version: string;
   available: boolean;
+  url: string;
   notes?: string;
 }
 
-export const checkForUpdates = async (): Promise<UpdateInfo> => {
+export const checkForUpdates = async (currentVersion: string): Promise<UpdateInfo> => {
   try {
-    const updater = await import('@tauri-apps/plugin-updater');
-    const check = await updater.check();
-    if (check) {
-      return { version: check.version, available: true, notes: check.body || '' };
+    const res = await fetch('https://api.github.com/repos/tq1r/velocity/releases/latest');
+    if (!res.ok) return { version: '', available: false, url: '' };
+    const data = await res.json();
+    const tag: string = data.tag_name || '';
+    const latestVersion = tag.replace(/^v/, '');
+    const current = currentVersion.replace(/^v/, '');
+    if (latestVersion && latestVersion !== current) {
+      return {
+        version: latestVersion,
+        available: true,
+        url: data.html_url || `https://github.com/tq1r/velocity/releases/tag/${tag}`,
+        notes: data.body || '',
+      };
     }
-    return { version: '', available: false };
+    return { version: '', available: false, url: '' };
   } catch {
-    return { version: '', available: false };
+    return { version: '', available: false, url: '' };
   }
-};
-
-export const installUpdate = async (): Promise<void> => {
-  try {
-    const updater = await import('@tauri-apps/plugin-updater');
-    const check = await updater.check();
-    if (check) {
-      await check.downloadAndInstall();
-    }
-  } catch {}
 };
