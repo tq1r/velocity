@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { useVelocityStore } from '../state/store';
-import { runLocalAIRequest, searchFiles, applyUnifiedDiff, startAiStream, listenForAiStream, getQuotaInfo } from '../lib/tauri';
+import { runLocalAIRequest, runAIRequest, searchFiles, applyUnifiedDiff, startAiStream, listenForAiStream, getQuotaInfo, getSettings } from '../lib/tauri';
 import type { AIChatMessage, AIRequest } from '../types';
 
 type AIAction = 'chat' | 'explain' | 'refactor' | 'edit';
@@ -29,6 +29,7 @@ export function AIPanel({ action, onActionChange }: AIPanelProps) {
   }, []);
 
   const isLocalModel = store.settings?.ai?.use_local_model ?? false;
+  const isDesktopApp = typeof window !== 'undefined' && (window as any).__TAURI__?.invoke != null;
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -46,6 +47,12 @@ export function AIPanel({ action, onActionChange }: AIPanelProps) {
 
   const handleSend = useCallback(async () => {
     if (!input.trim() || store.isAiWorking) return;
+
+    const hasApiKey = store.settings?.ai?.api_key;
+    if (!isLocalModel && !hasApiKey) {
+      store.pushAIMessage({ role: 'assistant', content: 'No API key configured. Open Settings (gear icon) to set up an AI provider.' });
+      return;
+    }
 
     const userMsg: AIChatMessage = { role: 'user', content: input };
     store.pushAIMessage(userMsg);
@@ -69,7 +76,7 @@ export function AIPanel({ action, onActionChange }: AIPanelProps) {
       getQuotaInfo(store.isOwner).then((q) => store.setQuota(q)).catch(() => {});
     };
 
-    if (!isLocalModel) {
+    if (isDesktopApp && !isLocalModel) {
       try {
         await startAiStream(request);
 
@@ -106,6 +113,22 @@ export function AIPanel({ action, onActionChange }: AIPanelProps) {
           role: 'assistant',
           content: `Error: ${err instanceof Error ? err.message : String(err)}`,
         });
+        store.setAiWorking(false);
+      }
+    } else if (!isLocalModel) {
+      // browser mode — direct API call
+      try {
+        const response = await runAIRequest(request);
+        refreshQuota();
+        const assistantMsg: AIChatMessage = { role: 'assistant', content: response.content || response.message || '' };
+        store.pushAIMessage(assistantMsg);
+        store.setLastAIResponse({ message: assistantMsg.content, diff: null, rewrite: null, referenced_files: [] });
+      } catch (err) {
+        store.pushAIMessage({
+          role: 'assistant',
+          content: `Error: ${err instanceof Error ? err.message : String(err)}`,
+        });
+      } finally {
         store.setAiWorking(false);
       }
     } else {
@@ -185,6 +208,23 @@ export function AIPanel({ action, onActionChange }: AIPanelProps) {
         ? 'Unlimited'
         : `${quota.remaining}/${quota.daily_limit} today`
     : null;
+
+  if (!store.user) {
+    return (
+      <div className="ai-panel">
+        <div className="ai-panel-header">
+          <span>AI</span>
+        </div>
+        <div className="ai-messages" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div style={{ textAlign: 'center', padding: 24 }}>
+            <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 8, color: 'var(--text-primary)' }}>Sign in to use AI</div>
+            <div style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 12 }}>Connect GitHub or Google to start coding with AI.</div>
+            <button className="ai-action-btn active" onClick={() => store.setLoginModalOpen(true)}>Sign In</button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="ai-panel">
