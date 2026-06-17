@@ -1,3 +1,4 @@
+import { useState, useRef, useCallback } from 'react';
 import type { EditorTab } from '../types';
 
 interface TabBarProps {
@@ -5,6 +6,7 @@ interface TabBarProps {
   activePath: string | null;
   onSelect: (path: string | null) => void;
   onClose: (path: string) => void;
+  onReorder?: (tabs: EditorTab[]) => void;
 }
 
 function getFileExtIcon(name: string): string {
@@ -22,17 +24,75 @@ function getFileExtIcon(name: string): string {
   }
 }
 
-export function TabBar({ tabs, activePath, onSelect, onClose }: TabBarProps) {
+export function TabBar({ tabs, activePath, onSelect, onClose, onReorder }: TabBarProps) {
+  const [dragIndex, setDragIndex] = useState<number | null>(null);
+  const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
+  const dragNodeRef = useRef<HTMLElement | null>(null);
+
   if (tabs.length === 0) return null;
+
+  const handleDragStart = useCallback((e: React.DragEvent, index: number) => {
+    setDragIndex(index);
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/plain', String(index));
+    dragNodeRef.current = e.currentTarget as HTMLElement;
+    setTimeout(() => {
+      if (dragNodeRef.current) dragNodeRef.current.style.opacity = '0.4';
+    }, 0);
+  }, []);
+
+  const handleDragOver = useCallback((e: React.DragEvent, index: number) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+    if (dragIndex !== null && dragIndex !== index) {
+      setDragOverIndex(index);
+    }
+  }, [dragIndex]);
+
+  const handleDragLeave = useCallback(() => {
+    setDragOverIndex(null);
+  }, []);
+
+  const handleDrop = useCallback((e: React.DragEvent, dropIndex: number) => {
+    e.preventDefault();
+    if (dragIndex === null || dragIndex === dropIndex) {
+      setDragIndex(null);
+      setDragOverIndex(null);
+      if (dragNodeRef.current) dragNodeRef.current.style.opacity = '';
+      dragNodeRef.current = null;
+      return;
+    }
+    const newTabs = [...tabs];
+    const [moved] = newTabs.splice(dragIndex, 1);
+    newTabs.splice(dropIndex, 0, moved);
+    onReorder?.(newTabs);
+    setDragIndex(null);
+    setDragOverIndex(null);
+    if (dragNodeRef.current) dragNodeRef.current.style.opacity = '';
+    dragNodeRef.current = null;
+  }, [dragIndex, tabs, onReorder]);
+
+  const handleDragEnd = useCallback(() => {
+    setDragIndex(null);
+    setDragOverIndex(null);
+    if (dragNodeRef.current) dragNodeRef.current.style.opacity = '';
+    dragNodeRef.current = null;
+  }, []);
 
   return (
     <div className="tab-bar">
-      {tabs.map((tab) => (
+      {tabs.map((tab, index) => (
         <div
           key={tab.path}
-          className={`tab-item${tab.path === activePath ? ' active' : ''}`}
+          className={`tab-item${tab.path === activePath ? ' active' : ''}${dragOverIndex === index ? ' drag-over' : ''}`}
           onClick={() => onSelect(tab.path)}
           title={tab.path}
+          draggable
+          onDragStart={(e) => handleDragStart(e, index)}
+          onDragOver={(e) => handleDragOver(e, index)}
+          onDragLeave={handleDragLeave}
+          onDrop={(e) => handleDrop(e, index)}
+          onDragEnd={handleDragEnd}
         >
           <span>{getFileExtIcon(tab.title)}</span>
           <span>{tab.title}</span>

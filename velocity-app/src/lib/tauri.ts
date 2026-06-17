@@ -270,6 +270,24 @@ export const searchFiles = async (query: string): Promise<string[]> => {
   return Object.keys(fs).filter(k => k.toLowerCase().includes(query.toLowerCase()));
 };
 
+export const searchFileContents = async (query: string): Promise<{ path: string; line: number; content: string }[]> => {
+  if (tauriInvoke) {
+    try { return await tauriInvoke('search_file_contents', { query }); } catch {}
+  }
+  const fs = ls();
+  const results: { path: string; line: number; content: string }[] = [];
+  const lowerQuery = query.toLowerCase();
+  for (const [path, content] of Object.entries(fs)) {
+    const lines = content.split('\n');
+    for (let i = 0; i < lines.length; i++) {
+      if (lines[i].toLowerCase().includes(lowerQuery)) {
+        results.push({ path, line: i + 1, content: lines[i].trim() });
+      }
+    }
+  }
+  return results.slice(0, 100);
+};
+
 let fsListeners: Array<(event: unknown) => void> = [];
 
 export const listenForFsChanges = (callback: (event: unknown) => void) => {

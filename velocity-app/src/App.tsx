@@ -6,6 +6,7 @@ import { ActivityBar } from './components/ActivityBar';
 import { FileExplorer } from './components/FileExplorer';
 import { TabBar } from './components/TabBar';
 import { MonacoEditor } from './components/MonacoEditor';
+import { InlineEditOverlay } from './components/InlineEditOverlay';
 import { AIPanel } from './components/AIPanel';
 import { StatusBar } from './components/StatusBar';
 import { CommandPalette } from './components/CommandPalette';
@@ -24,6 +25,7 @@ export default function App() {
   const [sidebarView, setSidebarView] = useState<SidebarView>('files');
   const [aiAction, setAIAction] = useState<AIAction>('chat');
   const [contextMenu, setContextMenu] = useState<{ x: number; y: number; node: FileNode } | null>(null);
+  const [editorContextMenu, setEditorContextMenu] = useState<{ x: number; y: number } | null>(null);
   const [setupDone, setSetupDone] = useState(false);
 
   useEffect(() => {
@@ -122,11 +124,23 @@ export default function App() {
         e.preventDefault();
         store.setSettingsOpen(true);
       }
+      if ((e.metaKey || e.ctrlKey) && e.key === 'i' && !e.shiftKey) {
+        e.preventDefault();
+        if (store.activeTabPath) {
+          store.setInlineEditOpen(true);
+        }
+      }
+      if ((e.metaKey || e.ctrlKey) && e.key === 'f' && e.shiftKey) {
+        e.preventDefault();
+        setSidebarView('search');
+      }
       if (e.key === 'Escape') {
         store.setCommandPaletteOpen(false);
         store.setSettingsOpen(false);
         store.setOnboardingOpen(false);
+        store.setInlineEditOpen(false);
         setContextMenu(null);
+        setEditorContextMenu(null);
       }
     };
     window.addEventListener('keydown', handleKeyDown);
@@ -134,7 +148,7 @@ export default function App() {
   }, []);
 
   useEffect(() => {
-    const handleClick = () => setContextMenu(null);
+    const handleClick = () => { setContextMenu(null); setEditorContextMenu(null); };
     window.addEventListener('click', handleClick);
     return () => window.removeEventListener('click', handleClick);
   }, []);
@@ -173,8 +187,13 @@ export default function App() {
   }, []);
 
   const handleTabClose = useCallback(async (path: string) => {
+    const tab = store.tabs.find((t) => t.path === path);
+    if (tab?.isDirty) {
+      const confirmed = confirm(`"${tab.title}" has unsaved changes. Close anyway?`);
+      if (!confirmed) return;
+    }
     store.closeTab(path);
-  }, []);
+  }, [store.tabs]);
 
   const handleEditorChange = useCallback((content: string) => {
     if (store.activeTabPath) {
@@ -291,23 +310,37 @@ export default function App() {
             <SearchPanel onFileSelect={handleFileSelect} />
           </div>
         )}
-        <div className="editor-area">
+          <div className="editor-area">
           <TabBar
             tabs={store.tabs}
             activePath={store.activeTabPath}
             onSelect={store.setActiveTab}
             onClose={handleTabClose}
+            onReorder={(tabs) => store.setTabs(tabs)}
           />
-          <div className="editor-container">
+        <div
+            className="editor-container"
+            onContextMenu={(e) => {
+              if (store.activeTabPath && store.selection?.text) {
+                e.preventDefault();
+                setEditorContextMenu({ x: e.clientX, y: e.clientY });
+              }
+            }}
+          >
             {activeTab ? (
-              <MonacoEditor
-                key={activeTab.path}
-                content={activeTab.content}
-                language={activeTab.language}
-                path={activeTab.path}
-                onChange={handleEditorChange}
-                onSelectionChange={store.setSelection}
-              />
+              <>
+                <MonacoEditor
+                  key={activeTab.path}
+                  content={activeTab.content}
+                  language={activeTab.language}
+                  path={activeTab.path}
+                  onChange={handleEditorChange}
+                  onSelectionChange={store.setSelection}
+                />
+                {store.inlineEditOpen && (
+                  <InlineEditOverlay onClose={() => store.setInlineEditOpen(false)} />
+                )}
+              </>
             ) : store.workspace ? (
               <div className="editor-welcome">
                 <svg width="56" height="56" viewBox="0 0 512 512" fill="none" style={{ opacity: 0.15 }}>
@@ -364,6 +397,26 @@ export default function App() {
           <div className="context-menu-item" onClick={() => { handleNewFolder(contextMenu.node.is_dir ? contextMenu.node.path : ''); setContextMenu(null); }}>
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
             New Folder
+          </div>
+        </div>
+      )}
+      {editorContextMenu && (
+        <div className="context-menu" style={{ left: editorContextMenu.x, top: editorContextMenu.y }}>
+          <div className="context-menu-item" onClick={() => { store.pushAIMessage({ role: 'user', content: `Explain this code:\n\`\`\`\n${store.selection?.text || ''}\n\`\`\`` }); setEditorContextMenu(null); setAIAction('chat'); }}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+            Explain Selection
+          </div>
+          <div className="context-menu-item" onClick={() => { store.pushAIMessage({ role: 'user', content: `Fix this code:\n\`\`\`\n${store.selection?.text || ''}\n\`\`\`` }); setEditorContextMenu(null); setAIAction('chat'); }}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+            Fix This
+          </div>
+          <div className="context-menu-item" onClick={() => { store.pushAIMessage({ role: 'user', content: `Refactor this code:\n\`\`\`\n${store.selection?.text || ''}\n\`\`\`` }); setEditorContextMenu(null); setAIAction('refactor'); }}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 20h16"/><path d="m6 16 6-12 6 12"/><path d="M8 12h8"/></svg>
+            Refactor
+          </div>
+          <div className="context-menu-item" onClick={() => { store.setInlineEditOpen(true); setEditorContextMenu(null); }}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+            Edit with AI
           </div>
         </div>
       )}

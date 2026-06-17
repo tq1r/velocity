@@ -19,6 +19,7 @@ interface VelocityState {
   aiMessages: AIChatMessage[];
   lastAIResponse: AIResponse | null;
   isAiWorking: boolean;
+  inlineEditOpen: boolean;
   commandPaletteOpen: boolean;
   settingsOpen: boolean;
   loginModalOpen: boolean;
@@ -31,6 +32,7 @@ interface VelocityState {
   quota: QuotaInfo | null;
   isOwner: boolean;
   setWorkspace: (workspace: WorkspaceSnapshot | null) => void;
+  setTabs: (tabs: EditorTab[]) => void;
   openTab: (tab: EditorTab) => void;
   updateTabContent: (path: string, content: string) => void;
   markSaved: (path: string, content: string) => void;
@@ -41,6 +43,7 @@ interface VelocityState {
   replaceAIMessages: (messages: AIChatMessage[]) => void;
   setLastAIResponse: (response: AIResponse | null) => void;
   setAiWorking: (value: boolean) => void;
+  setInlineEditOpen: (value: boolean) => void;
   setCommandPaletteOpen: (value: boolean) => void;
   setSettingsOpen: (value: boolean) => void;
   setLoginModalOpen: (value: boolean) => void;
@@ -68,6 +71,7 @@ export const useVelocityStore = create<VelocityState>((set) => ({
   ],
   lastAIResponse: null,
   isAiWorking: false,
+  inlineEditOpen: false,
   commandPaletteOpen: false,
   settingsOpen: false,
   loginModalOpen: false,
@@ -80,6 +84,7 @@ export const useVelocityStore = create<VelocityState>((set) => ({
   quota: null,
   isOwner: false,
   setWorkspace: (workspace) => set({ workspace }),
+  setTabs: (tabs) => set({ tabs }),
   openTab: (tab) =>
     set((state) => {
       const existing = state.tabs.find((item) => item.path === tab.path);
@@ -122,6 +127,7 @@ export const useVelocityStore = create<VelocityState>((set) => ({
   replaceAIMessages: (aiMessages) => set({ aiMessages }),
   setLastAIResponse: (lastAIResponse) => set({ lastAIResponse }),
   setAiWorking: (isAiWorking) => set({ isAiWorking }),
+  setInlineEditOpen: (inlineEditOpen) => set({ inlineEditOpen }),
   setCommandPaletteOpen: (commandPaletteOpen) => set({ commandPaletteOpen }),
   setSettingsOpen: (settingsOpen) => set({ settingsOpen }),
   setLoginModalOpen: (loginModalOpen) => set({ loginModalOpen }),
