@@ -91,7 +91,7 @@ export function AIPanel({ action, onActionChange }: AIPanelProps) {
           (response) => {
             setStreamingContent(null);
             refreshQuota();
-            const assistantMsg: AIChatMessage = { role: 'assistant', content: response.message };
+            const assistantMsg: AIChatMessage = { role: 'assistant', content: response.message ?? '' };
             store.pushAIMessage(assistantMsg);
             store.setLastAIResponse(response);
             if (response.diff) setDiffContent(response.diff);
@@ -137,7 +137,7 @@ export function AIPanel({ action, onActionChange }: AIPanelProps) {
     } else {
       try {
         const response = await runLocalAIRequest(request);
-        const assistantMsg: AIChatMessage = { role: 'assistant', content: response.message };
+        const assistantMsg: AIChatMessage = { role: 'assistant', content: response.message ?? '' };
         store.pushAIMessage(assistantMsg);
         store.setLastAIResponse(response);
         if (response.diff) setDiffContent(response.diff);
