@@ -30,7 +30,7 @@
   },
   "bundle": {
     "active": true,
-    "targets": "all",
+    "targets": ["msi"],
     "shortDescription": "A premium AI-powered code editor.",
     "longDescription": "Velocity is a desktop AI IDE with Monaco editing, project indexing, diff-based AI editing, and a premium multi-panel workspace.",
     "icon": [
@@ -39,7 +39,15 @@
       "icons/128x128@2x.png",
       "icons/icon.png",
       "icons/icon.ico"
-    ]
+    ],
+    "windows": {
+      "wix": {
+        "language": "en-US",
+        "template": null,
+        "fragment": null,
+        "componentRefs": []
+      }
+    }
   }
-  }
+}
 }
